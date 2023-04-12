@@ -1,9 +1,9 @@
-short_name = "godot"
+short_name = "lam_godot"
 name = "Godot Engine"
-major = 4
+major = 0
 minor = 0
 patch = 1
-status = "stable"
+status = "alpha"
 module_config = ""
 year = 2023
 website = "https://godotengine.org"
