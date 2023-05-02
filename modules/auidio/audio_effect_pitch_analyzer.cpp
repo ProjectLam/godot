@@ -239,6 +239,11 @@ void AudioEffectPitchAnalyzerInstance::process(const AudioFrame *p_src_frames, A
 
 			fft_pos = next; //swap
 			temporal_fft_pos = 0;
+
+			PackedVector2Array arg1;
+			arg1.resize(dst_peaks.size());
+			memcpy(arg1.ptrw(), dst_peaks.data(), dst_peaks.size()*sizeof(Vector2));
+			call_deferred("emit_signal", "new_frame_processed", arg1);
 		}
 	}
 
@@ -249,6 +254,8 @@ void AudioEffectPitchAnalyzerInstance::process(const AudioFrame *p_src_frames, A
 
 void AudioEffectPitchAnalyzerInstance::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_peaks"), &AudioEffectPitchAnalyzerInstance::get_peaks);
+	ADD_SIGNAL(MethodInfo("new_frame_processed", 
+		PropertyInfo(Variant::PACKED_VECTOR2_ARRAY, "frame_data")));
 }
 
 // Vector2 AudioEffectPitchAnalyzerInstance::get_magnitude_for_frequency_range(float p_begin, float p_end, MagnitudeMode p_mode) const {
