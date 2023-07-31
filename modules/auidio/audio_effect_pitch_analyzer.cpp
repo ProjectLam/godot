@@ -85,7 +85,7 @@ template <typename T> fft_arg<T> fft1d(const fft_arg<T> &xi, fft_arg<T> &xo, int
 {
 	int cnt = xi.size();
     int msb = findMSB(cnt);
-    T nrm = 1.0 / sqrt(T(cnt));
+    T nrm = 1.0;// / sqrt(T(cnt));
 	xo.resize(cnt);
 
     // pre-process the input data
@@ -127,6 +127,11 @@ void _autocorrelation(fft_arg<float> &frames, fft_arg<float> &scratch) {
 		*it = rl*rl + im*im;
 	}
 	fft1d(scratch, frames, 1);
+	float nrm = 1.0/frames.size();
+
+	for(auto it = frames.begin(); it != frames.end(); ++it) {
+		*it *= nrm;
+	}
 }
 
 // TODO : If needed the clarity threshold can be replaced by a Callable 
@@ -185,6 +190,7 @@ void AudioEffectPitchAnalyzerInstance::_limit_peaks(std::vector<peak_t> &peaks, 
 	
 	scratch.clear();
 	scratch.swap(peaks);
+	peaks.resize(0);
 
 	for(auto it = scratch.begin(); it != scratch.end(); ++it) {
 		if(it->y >= cl_thr) {
@@ -235,6 +241,7 @@ void AudioEffectPitchAnalyzerInstance::process(const AudioFrame *p_src_frames, A
 			// finalizing peak values :
 			for(auto it = dst_peaks.begin(); it != dst_peaks.end(); ++it) {
 				it->x = mix_rate/it->x;
+				// it->y = it->y/temporal_fft1[0].real();
 			}
 
 			fft_pos = next; //swap
