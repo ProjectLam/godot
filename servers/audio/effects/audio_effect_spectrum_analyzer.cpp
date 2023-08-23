@@ -129,18 +129,23 @@ void AudioEffectSpectrumAnalyzerInstance::process(const AudioFrame *p_src_frames
 			//time to do a FFT
 			smbFft(fftw, fft_size * 2, -1);
 			smbFft(fftw + fft_size * 4, fft_size * 2, -1);
+			PackedVector2Array fdata;
+			fdata.resize(fft_size);
+			Vector2 *fdata_w = fdata.ptrw();
 			int next = (fft_pos + 1) % fft_count;
 
 			AudioFrame *hw = (AudioFrame *)fft_history[next].ptr(); //do not use write, avoid cow
 
 			for (int i = 0; i < fft_size; i++) {
 				//abs(vec)/fft_size normalizes each frequency
+				fdata_w[i] = Vector2(fftw[i * 2], fftw[i * 2 + 1]);
 				hw[i].l = Vector2(fftw[i * 2], fftw[i * 2 + 1]).length() / float(fft_size);
 				hw[i].r = Vector2(fftw[fft_size * 4 + i * 2], fftw[fft_size * 4 + i * 2 + 1]).length() / float(fft_size);
 			}
 
 			fft_pos = next; //swap
 			temporal_fft_pos = 0;
+			call_deferred("emit_signal", "new_frame_processed", fdata);
 		}
 	}
 
@@ -151,6 +156,8 @@ void AudioEffectSpectrumAnalyzerInstance::process(const AudioFrame *p_src_frames
 
 void AudioEffectSpectrumAnalyzerInstance::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_magnitude_for_frequency_range", "from_hz", "to_hz", "mode"), &AudioEffectSpectrumAnalyzerInstance::get_magnitude_for_frequency_range, DEFVAL(MAGNITUDE_MAX));
+	ADD_SIGNAL(MethodInfo("new_frame_processed", 
+		PropertyInfo(Variant::PACKED_VECTOR2_ARRAY, "frame_data")));
 	BIND_ENUM_CONSTANT(MAGNITUDE_AVERAGE);
 	BIND_ENUM_CONSTANT(MAGNITUDE_MAX);
 }
